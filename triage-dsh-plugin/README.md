@@ -61,6 +61,29 @@ Notes on the mapping:
 
 ## Install
 
+### Personal deployment — no pnpm needed
+
+For your own machine (not distribution), skip the npm route entirely: the loader
+imports an entry's `name` as a plain module specifier, so an **absolute path works
+as-is**. Append one `insert` to the profile's user patch layer
+(`~/.dsh/profiles/<profile>/cordis.patch.yml`, e.g. `web`):
+
+```yaml
+- insert:
+    - id: linkhealth-intake-triage
+      name: '/absolute/path/to/triage-dsh-plugin/lib/index.js'
+      config:
+        logPath: 'data/triage_log.jsonl'
+```
+
+No pnpm, no `dsh plugin` command, no changes to `package.json` or
+`dsh.profile.bundles`. The patch layer is **hot-reloaded**, so the plugin activates
+without a restart (verified live in the web profile). To remove it, delete the
+`insert` block; to use it in another profile (e.g. `headless`), add the same block
+there. The entry pins an absolute path — update it if the repo moves.
+
+### Distribution route (npm package)
+
 Requires the `dsh` CLI (`>= 0.1.0-rc.6`) and `pnpm` on `PATH` (`dsh plugin` forwards to
 pnpm). Install from a local checkout or from a git/npm spec:
 
