@@ -11,22 +11,18 @@ separate app or framework.
 
 ## What it does
 
-```
-enquiry (raw_text, industry, org_size, stated_urgency)
-   │
-   ▼
-intake-triage Skill (hub)
-   1. classify → exactly one of 3 service lines
-   2. score complexity → 4 dimensions × 0–2, summed → simple / moderate / complex
-   3. PHI guardrail → data_sensitivity ≥ 1 ⇒ phi_involved=true ⇒ requires_human_review=true
-   4. ambiguity check → weak fit still gets a best-guess label, never a 4th category
-   5. append decision to data/triage_log.jsonl (hook validates the guardrail on every write)
-   │
-   ├─ requires_human_review = true  → stop here, queued for human sign-off
-   │
-   └─ requires_human_review = false → dispatch to matching spoke agent
-                                        (isolated context, Read/Write only)
-                                        → drafts scoping note + clarifying questions
+```mermaid
+flowchart TD
+    A["Enquiry<br/>raw_text · industry · org_size · stated_urgency"] --> B["intake-triage Skill (hub)"]
+    B --> S1["1. Classify → one of 3 service lines"]
+    S1 --> S2["2. Score complexity<br/>4 dimensions × 0–2 → simple / moderate / complex"]
+    S2 --> S3["3. PHI guardrail<br/>data_sensitivity ≥ 1 ⇒ phi_involved = true"]
+    S3 --> S4["4. Ambiguity check<br/>weak fit → best-guess label, never a 4th category"]
+    S4 --> L["Append decision to data/triage_log.jsonl<br/>(hook validates the guardrail on every write)"]
+    L --> D{requires_human_review?}
+    D -->|true| H["Stop — queued for human sign-off"]
+    D -->|false| SP["Dispatch to matching spoke agent<br/>(isolated context, Read/Write only)"]
+    SP --> N["Scoping note + clarifying questions"]
 ```
 
 **The one hard stop:** any enquiry touching clinical/patient-identifiable data
