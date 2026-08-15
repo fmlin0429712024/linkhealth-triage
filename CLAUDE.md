@@ -135,3 +135,12 @@ design detail worth knowing before touching the hook: the plugin's copy of
 not from its own file location — the source repo's copy still uses the file-location
 approach, since that one always runs from a known place. Don't collapse these into one
 implementation without preserving that distinction.
+
+The same system is also packaged for DeepSeek Harness at `triage-dsh-plugin/` (a DSH
+bundle: `package.json` with `dsh.bundle.patch` → `cordis.patch.yml`, plus
+`lib/index.js` registering the skill/spokes and the guardrail on `ctx.skills` /
+`ctx.tools`, and `lib/validate.js`). The guardrail rule set lives in **three** places
+that must stay in sync: `SKILL.md` Step 3 (instruction), `triage-dsh-plugin/lib/validate.js`
+(JS backstop + `validate-triage-log` tool), and `triage-dsh-plugin/scripts/validate_triage_log.py`
+(standalone parity copy). Live-verified against a real DSH headless profile — see
+`triage-dsh-plugin/README.md`.

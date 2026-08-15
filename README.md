@@ -99,8 +99,11 @@ docs/
   PRD.md                          full spec: requirements, data flow, scope boundaries
   TASKS.md                        spec-driven task breakdown, done/open status
 .claude-plugin/marketplace.json   repo-root marketplace listing (points at triage-claude-plugin/)
-triage-claude-plugin/             self-contained plugin packaging of the same system
+triage-claude-plugin/             self-contained Claude Code plugin packaging of the same system
   (portable copy of the skill, agents, hook, and demo cases — see its own README)
+triage-dsh-plugin/                self-contained DeepSeek Harness (DSH) plugin packaging of the
+  same system (bundle manifest + patch, the same skill and spokes, a JS guardrail backstop
+  wired to DSH's tools/post-execute, and the parity Python script — see its own README)
 ```
 
 ## 2. Running and validating it
@@ -191,3 +194,60 @@ and a message queue (see the trigger table in `docs/PRD.md` §7 for when that ch
   appointment time) as not triggering the guardrail, reserving it for clinical
   content. That's a defensible but debatable line — worth revisiting against actual
   legal/compliance guidance rather than a judgment call made while building this.
+
+## 4. Deploy through DSH Plugin
+
+The same system ships as a **DeepSeek Harness (DSH)** plugin in `triage-dsh-plugin/`.
+This is **not a distribution package** — it is a personal deployment that leans on
+DSH's "everything is a plugin" architecture. There is no build step, no npm package to
+publish, no marketplace, no dependency install. The harness is the runtime; the plugin
+is just a folder of files plus one entry in the profile's own patch layer.
+
+### Why there is no install step
+
+A *distributable* DSH plugin is an npm package (a `dsh.bundle` manifest) that pnpm
+installs into a profile's `node_modules` and that gets listed in `dsh.profile.bundles`.
+That machinery exists so third parties can consume someone else's plugin. For your own
+plugin you can skip all of it: the loader imports an entry's `name` as a plain module
+specifier, and an **absolute path works as-is**. Deployment is a single `insert` in the
+profile's user patch layer — `~/.dsh/profiles/<profile>/cordis.patch.yml` (e.g. `web`):
+
+```yaml
+# Deploy LinkHealth intake triage in this profile.
+- insert:
+    - id: linkhealth-intake-triage
+      name: '/absolute/path/to/linkhealth-triage/triage-dsh-plugin/lib/index.js'
+      config:
+        logPath: 'data/triage_log.jsonl'
+```
+
+No pnpm, no `dsh plugin` command, no changes to `package.json` or `dsh.profile.bundles`.
+
+### No restart either — the user layer hot-reloads
+
+The profile's `cordis.patch.yml` is the hot-reloaded user layer: the running server
+re-applies it on change, so the plugin activates **immediately, without a restart**.
+Verified live: the moment the entry was written, the running web UI's skill catalog
+showed `intake-triage` plus the three spokes, and the skill loaded end to end.
+
+### What deploying it gives you
+
+| Piece | Registered as | Effect |
+|---|---|---|
+| Hub skill | `intake-triage` on `ctx.skills` | classify → score → guardrail → log → route |
+| Spokes | `automation-lead` / `data-lead` / `deployment-lead` skills | role prompts the hub embeds when dispatching a subagent |
+| Guardrail check | `validate-triage-log` tool | explicit pass/fail check of the last log record |
+| Guardrail backstop | `tools/post-execute` listener | blocks any `write`/`edit` to a `data/triage_log.jsonl` whose last record violates `phi_involved ⇒ requires_human_review` |
+
+### Managing it
+
+- **Other profiles** (e.g. `headless`): add the same `insert` to that profile's
+  `cordis.patch.yml`.
+- **Removing it**: delete the `insert` block — the hot-reload tears the registrations
+  down.
+- **Moving the repo**: the entry pins an absolute path; update that one line.
+- **Verifying**: `dsh --profile <name> --dump-config` shows the composed tree, or just
+  start a session and ask it what skills it has.
+
+See `triage-dsh-plugin/README.md` for the full plugin layout and the Claude Code ↔ DSH
+mapping.
