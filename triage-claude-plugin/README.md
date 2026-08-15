@@ -13,7 +13,15 @@ skills/intake-triage/        classification + complexity scoring + routing decis
 agents/*.md                  automation-lead, data-lead, deployment-lead spokes
 hooks/hooks.json             PostToolUse hook registration
 scripts/validate_triage_log.py   guardrail enforcement (phi_involved ⇒ requires_human_review)
+examples/synthetic_enquiries.jsonl   12 sample enquiries for a live demo — paste one at a
+                              time (e.g. "run intake-triage on case E005 in
+                              examples/synthetic_enquiries.jsonl") to show the classify →
+                              log → guardrail → dispatch flow without touching real data
 ```
+
+`examples/` is demo data only, not a test harness — for automated grading against
+`expected_*` labels, use `data/eval_harness.py` in the source repo (root `README.md`),
+which isn't bundled here since it depends on the `claude` CLI and repo-relative paths.
 
 ## Install
 
