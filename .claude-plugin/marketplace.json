@@ -1,4 +1,9 @@
 {
+  "name": "linkhealth-triage",
+  "owner": {
+    "name": "fmlin",
+    "email": "fmlin0429712024@gmail.com"
+  },
   "plugins": [
     {
       "name": "linkhealth-intake-triage",
