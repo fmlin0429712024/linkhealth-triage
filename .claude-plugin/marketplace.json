@@ -1,0 +1,10 @@
+{
+  "plugins": [
+    {
+      "name": "linkhealth-intake-triage",
+      "source": "./triage-claude-plugin",
+      "description": "Classifies, scores, and routes inbound healthcare-sector business enquiries by service line and complexity, with a mandatory PHI/compliance guardrail before any automated handoff.",
+      "version": "1.0.0"
+    }
+  ]
+}

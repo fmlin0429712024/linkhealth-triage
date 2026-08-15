@@ -96,9 +96,23 @@ data/
 docs/
   PRD.md                          full spec: requirements, data flow, scope boundaries
   TASKS.md                        spec-driven task breakdown, done/open status
+.claude-plugin/marketplace.json   repo-root marketplace listing (points at triage-claude-plugin/)
 triage-claude-plugin/             self-contained plugin packaging of the same system
-  (portable copy of the skill, agents, and hook — see its own README)
+  (portable copy of the skill, agents, hook, and demo cases — see its own README)
 ```
+
+## Installing the plugin
+
+The repo root doubles as a plugin marketplace (`.claude-plugin/marketplace.json`), which
+lists `triage-claude-plugin/` as a plugin by relative path — no separate repo needed.
+
+```
+/plugin marketplace add fmlin0429712024/linkhealth-triage
+/plugin install linkhealth-intake-triage
+```
+
+Then try it on a bundled sample, e.g.: *"run intake-triage on case E005 in
+triage-claude-plugin/examples/synthetic_enquiries.jsonl."*
 
 ## Running the tests
 
