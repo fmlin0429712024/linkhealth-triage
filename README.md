@@ -9,7 +9,9 @@ whenever patient data is in play.
 Built entirely from Claude Code primitives: a Skill, three Agents, and a hook. No
 separate app or framework.
 
-## 1. What it does
+## 1. Architecture
+
+### What it does
 
 ```mermaid
 flowchart TD
@@ -47,14 +49,14 @@ Two different planes, drawn deliberately: the blue nodes are the Skill/Agents re
 in-context — they can be wrong or forget an instruction. The orange node is a plain
 Python script the Claude Code **harness** runs after every `Write`, entirely outside the
 model's context — it doesn't trust the model, it re-reads the file and checks the rule
-itself. See "3. The guardrail is enforced twice, on purpose" below.
+itself. See "The guardrail is enforced twice, on purpose" below.
 
 **The one hard stop:** any enquiry touching clinical/patient-identifiable data
 (`phi_involved: true`) always requires human review and is never auto-dispatched,
 regardless of how "simple" it otherwise scores. Everything else can run end-to-end
 without a human in the loop.
 
-## 2. Why hub-and-spoke, and why isolated spokes
+### Why hub-and-spoke, and why isolated spokes
 
 - **Untrusted input** — `raw_text` comes from a public web form; it's a real
   prompt-injection surface. Tool-restricted (`Read`/`Write` only), isolated spoke
@@ -70,7 +72,7 @@ No message queue at current volume (~40–60/week, single operator) — the appe
 already gives durability, since a decision is persisted before the spoke step runs. See
 `docs/PRD.md` §7 for the specific triggers that would change this call.
 
-## 3. The guardrail is enforced twice, on purpose
+### The guardrail is enforced twice, on purpose
 
 The rule (`phi_involved: true` ⇒ `requires_human_review: true`, no auto-dispatch) is
 stated once as a model instruction (`SKILL.md` Step 3) and enforced a second time in
@@ -80,7 +82,7 @@ exit, clear stderr) if a record violates the rule or is missing required fields.
 instruction can't be trusted alone; the hook doesn't depend on the model remembering
 anything.
 
-## 4. Repository layout
+### Repository layout
 
 ```
 .claude/
@@ -101,7 +103,9 @@ triage-claude-plugin/             self-contained plugin packaging of the same sy
   (portable copy of the skill, agents, hook, and demo cases — see its own README)
 ```
 
-## 5. Installing the plugin
+## 2. Running and validating it
+
+### Installing the plugin
 
 The repo root doubles as a plugin marketplace (`.claude-plugin/marketplace.json`), which
 lists `triage-claude-plugin/` as a plugin by relative path — no separate repo needed.
@@ -121,7 +125,7 @@ lists `triage-claude-plugin/` as a plugin by relative path — no separate repo 
 Then try it on a bundled sample, e.g.: *"run intake-triage on case E005 in
 triage-claude-plugin/examples/synthetic_enquiries.jsonl."*
 
-## 6. Validated in Claude Cowork
+### Validated in Claude Cowork
 
 Beyond the synthetic eval harness, the packaged plugin was installed in Claude Cowork and
 run live against two bundled cases:
@@ -142,7 +146,7 @@ synthetic eval alone wouldn't have caught:
 - **A design decision that paid off**: Cowork installs a plugin read-only and redirects
   `Write` calls to a per-task working folder outside the plugin directory. The guardrail
   hook (`scripts/validate_triage_log.py`) reads the actual written-to path from its own
-  stdin payload rather than deriving it from its file location on disk — see "3. The
+  stdin payload rather than deriving it from its file location on disk — see "The
   guardrail is enforced twice, on purpose" above — which is exactly why it kept working
   once the log path moved somewhere the hook's source location never anticipated.
 
@@ -151,7 +155,7 @@ review should happen against the durable record, not a chat transcript, a review
 open the actual `triage_log.jsonl` in Cowork's working folder for a queued case rather
 than trusting the conversational summary — that's the whole point of logging it.
 
-## 7. Running the tests
+### Running the tests
 
 ```bash
 # Hook logic, offline, no model calls
@@ -167,7 +171,9 @@ Both the hook's own test suite and a live run through the Skill (classify → lo
 validate → dispatch to a spoke) have been exercised against real cases, including one
 that trips the PHI guardrail and correctly halts before dispatch.
 
-## 8. Scope boundaries (deliberate, not gaps)
+## 3. Production considerations
+
+### Scope boundaries (deliberate, not gaps)
 
 This system triages **business enquiries about services** — it does not triage
 patients and is never repurposed for clinical decision support. Also deliberately not
@@ -175,7 +181,7 @@ built this round: a web front-end for the intake form (synthetic JSONL stands in
 submissions), an internal review dashboard (the log file is sufficient at this volume),
 and a message queue (see the trigger table in `docs/PRD.md` §7 for when that changes).
 
-## 9. What I'd change with more scale or time
+### What I'd change with more scale or time
 
 - Replace the synchronous Agent-tool dispatch with a real queue once volume or
   multi-lead claiming requires it (trigger table in `docs/PRD.md` §7).
