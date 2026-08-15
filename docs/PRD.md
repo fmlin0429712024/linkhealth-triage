@@ -163,10 +163,26 @@ silently decided without a durable record.
 
 ## 11. Out of scope (this round)
 
-- Plugin packaging for external distribution — deliberately last, not started.
 - A real web front-end for the intake form — the form is treated as the input contract;
   synthetic JSONL stands in for actual submissions.
 - An internal review dashboard — the log file is sufficient at current volume.
 - A message queue — see trigger table in §7.
 - Live conversational intake (chat-based form-filling) — the brief's literal scenario is
   a static form; a conversational front-end is a larger, separate product decision.
+
+## 12. Plugin packaging and distribution
+
+The hub, spokes, and hook are additionally packaged as a self-contained Claude Code
+plugin (`triage-claude-plugin/`, listed via a repo-root `.claude-plugin/marketplace.json`)
+so the system can be installed and demoed without the source repo present — see root
+`README.md` §1–2 for the manifest layout and install flow.
+
+This was live-validated in Claude Cowork, not just written and assumed to work: the
+packaged plugin correctly classified and routed a clean case (auto-dispatch to a spoke)
+and correctly halted a PHI-flagged case before any dispatch, matching the same
+`expected_*` labels as the synthetic eval set. That pass also surfaced one packaging
+defect (a `marketplace.json` missing required top-level fields) and confirmed one design
+decision — the guardrail hook resolves its target file path from the hook payload
+rather than its own file location, which is why it kept working once Cowork's sandboxing
+moved the log to a path the hook's source location never anticipated. Full account in
+root `README.md` §2.

@@ -8,6 +8,8 @@
     "email": "fmlin0429712024@gmail.com"
   },
   "license": "MIT",
+  "homepage": "https://github.com/fmlin0429712024/linkhealth-triage",
+  "repository": "https://github.com/fmlin0429712024/linkhealth-triage",
   "keywords": ["intake", "triage", "routing", "healthcare", "hub-and-spoke"],
   "skills": "./skills/",
   "agents": [

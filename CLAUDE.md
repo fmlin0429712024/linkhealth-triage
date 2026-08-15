@@ -116,6 +116,22 @@ the Skill/Agent/hook configuration itself, invoked through Claude Code.
 - Per PRD §11 (explicitly out of scope this round): no web front-end, no review
   dashboard, no message queue, no live conversational intake. Don't add these unless
   the user asks — they're deliberate scope cuts, not gaps.
-- Open items tracked in `docs/TASKS.md` (not yet done as of last update): a live smoke
-  test of the Skill via the `Skill` tool in a fresh session, and actually running
-  `eval_harness.py` end-to-end.
+- Open item tracked in `docs/TASKS.md` (not yet done as of last update): running
+  `eval_harness.py` as a full batch across all 12 cases. Live spot checks of the Skill
+  and the packaged plugin (in-session and in Claude Cowork) have already been run and
+  matched expected labels — see `docs/TASKS.md` §2.1/§4.2.
+
+## Plugin packaging
+
+The same Skill, Agents, and hook are also packaged as a self-contained Claude Code
+plugin at `triage-claude-plugin/` (hard copies, not symlinks — keep them in sync
+manually if you edit `.claude/skills/`, `.claude/agents/`, or the hook). A repo-root
+`.claude-plugin/marketplace.json` lists it by relative path so it installs directly from
+this repo (`/plugin marketplace add <owner>/<repo>` in Claude Code, or Customize →
+Plugins → Add marketplace in Claude Cowork) without needing a separate plugin-only repo.
+See root `README.md` §1–2 and `docs/PRD.md` §12 for the full rationale, including one
+design detail worth knowing before touching the hook: the plugin's copy of
+`validate_triage_log.py` resolves its target file path from the hook's stdin payload,
+not from its own file location — the source repo's copy still uses the file-location
+approach, since that one always runs from a known place. Don't collapse these into one
+implementation without preserving that distinction.

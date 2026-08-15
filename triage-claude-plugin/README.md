@@ -25,9 +25,23 @@ which isn't bundled here since it depends on the `claude` CLI and repo-relative 
 
 ## Install
 
-Add this directory as a plugin source in Claude Code (local path or, once pushed, a Git
-marketplace source), then enable `linkhealth-intake-triage`. No build step — it's Skill
-+ Agent markdown, plus one dependency-free Python script.
+The repo this directory lives in doubles as a plugin marketplace
+(`.claude-plugin/marketplace.json` at the repo root lists this folder by relative path)
+— no separate plugin-only repo needed.
+
+**Claude Code (CLI):**
+
+```
+/plugin marketplace add fmlin0429712024/linkhealth-triage
+/plugin install linkhealth-intake-triage
+```
+
+**Claude Cowork:** Customize → Plugins → Add marketplace, paste
+`https://github.com/fmlin0429712024/linkhealth-triage`, then install
+`linkhealth-intake-triage`.
+
+No build step either way — it's Skill + Agent markdown, plus one dependency-free Python
+script. Live-validated in both: see root `README.md` §2 ("Validated in Claude Cowork").
 
 ## Source of truth
 
