@@ -106,13 +106,50 @@ triage-claude-plugin/             self-contained plugin packaging of the same sy
 The repo root doubles as a plugin marketplace (`.claude-plugin/marketplace.json`), which
 lists `triage-claude-plugin/` as a plugin by relative path — no separate repo needed.
 
+**Claude Code (CLI):**
+
 ```
 /plugin marketplace add fmlin0429712024/linkhealth-triage
 /plugin install linkhealth-intake-triage
 ```
 
+**Claude Cowork:** plugins install through the UI, not slash commands — open
+**Customize → Plugins → Add marketplace**, paste
+`https://github.com/fmlin0429712024/linkhealth-triage`, then install
+`linkhealth-intake-triage` from the results.
+
 Then try it on a bundled sample, e.g.: *"run intake-triage on case E005 in
 triage-claude-plugin/examples/synthetic_enquiries.jsonl."*
+
+## Validated in Claude Cowork
+
+Beyond the synthetic eval harness, the packaged plugin was installed in Claude Cowork and
+run live against two bundled cases:
+
+- **E005** (AGV waste transport, hemodialysis center) — Onsite Automation & Robotics
+  Deployment, moderate (total=4), `phi_involved: false`, auto-routed to `deployment-lead`,
+  which drafted a scoping note and flagged an onsite walkthrough as a prerequisite.
+- **E002** (prior-authorization automation, 450-bed hospital network) — Process &
+  Workflow Automation, complex (total=6), `phi_involved: true` → `requires_human_review:
+  true`, correctly stopped before any spoke dispatch.
+
+Both matched their `expected_*` labels exactly. Two things this pass surfaced that a
+synthetic eval alone wouldn't have caught:
+
+- **A packaging bug**: `.claude-plugin/marketplace.json` initially listed only `plugins`,
+  missing the required top-level `name` and `owner` fields — Cowork's "Add marketplace"
+  rejected it until those were added. Worth checking if you fork this and rename things.
+- **A design decision that paid off**: Cowork installs a plugin read-only and redirects
+  `Write` calls to a per-task working folder outside the plugin directory. The guardrail
+  hook (`scripts/validate_triage_log.py`) reads the actual written-to path from its own
+  stdin payload rather than deriving it from its file location on disk — see "The
+  guardrail is enforced twice, on purpose" above — which is exactly why it kept working
+  once the log path moved somewhere the hook's source location never anticipated.
+
+One operational implication for the guardrail-tripped case specifically: since sign-off
+review should happen against the durable record, not a chat transcript, a reviewer should
+open the actual `triage_log.jsonl` in Cowork's working folder for a queued case rather
+than trusting the conversational summary — that's the whole point of logging it.
 
 ## Running the tests
 
