@@ -1,0 +1,19 @@
+{
+  "name": "linkhealth-intake-triage",
+  "displayName": "LinkHealth Intake Triage",
+  "version": "1.0.0",
+  "description": "Classifies, scores, and routes inbound healthcare-sector business enquiries by service line and complexity, with a mandatory PHI/compliance guardrail before any automated handoff.",
+  "author": {
+    "name": "fmlin",
+    "email": "fmlin0429712024@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["intake", "triage", "routing", "healthcare", "hub-and-spoke"],
+  "skills": "./skills/",
+  "agents": [
+    "./agents/automation-lead.md",
+    "./agents/data-lead.md",
+    "./agents/deployment-lead.md"
+  ],
+  "hooks": "./hooks/hooks.json"
+}

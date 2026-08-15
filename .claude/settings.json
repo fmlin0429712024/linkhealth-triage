@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path' | { read -r f; case \"$f\" in */data/triage_log.jsonl) python3 .claude/hooks/validate_triage_log.py ;; esac; }",
+            "statusMessage": "Validating triage log guardrail..."
+          }
+        ]
+      }
+    ]
+  }
+}
