@@ -13,17 +13,41 @@ separate app or framework.
 
 ```mermaid
 flowchart TD
-    A["Enquiry<br/>raw_text · industry · org_size · stated_urgency"] --> B["intake-triage Skill (hub)"]
-    B --> S1["1. Classify → one of 3 service lines"]
-    S1 --> S2["2. Score complexity<br/>4 dimensions × 0–2 → simple / moderate / complex"]
-    S2 --> S3["3. PHI guardrail<br/>data_sensitivity ≥ 1 ⇒ phi_involved = true"]
-    S3 --> S4["4. Ambiguity check<br/>weak fit → best-guess label, never a 4th category"]
-    S4 --> L["Append decision to data/triage_log.jsonl<br/>(hook validates the guardrail on every write)"]
-    L --> D{requires_human_review?}
-    D -->|true| H["Stop — queued for human sign-off"]
-    D -->|false| SP["Dispatch to matching spoke agent<br/>(isolated context, Read/Write only)"]
-    SP --> N["Scoping note + clarifying questions"]
+    A["Enquiry<br/>raw_text · industry · org_size · stated_urgency"] --> B
+
+    subgraph MODEL["Model workflow — Skill + Agents, in-context"]
+        B["intake-triage Skill (hub)"]
+        B --> S1["1. Classify → one of 3 service lines"]
+        S1 --> S2["2. Score complexity<br/>4 dimensions × 0–2 → simple / moderate / complex"]
+        S2 --> S3["3. Flag PHI<br/>data_sensitivity ≥ 1 ⇒ phi_involved = true"]
+        S3 --> S4["4. Ambiguity check<br/>weak fit → best-guess label, never a 4th category"]
+        S4 --> W["Write decision to data/triage_log.jsonl"]
+        D{requires_human_review?}
+        D -->|true| STOP["Stop — queued for human sign-off"]
+        D -->|false| SP["Dispatch to matching spoke agent<br/>(isolated context, Read/Write only)"]
+        SP --> N["Scoping note + clarifying questions"]
+    end
+
+    subgraph HARNESS["Harness — PostToolUse hook, deterministic, outside the model"]
+        H["validate_triage_log.py<br/>re-reads the file, enforces phi_involved ⇒ requires_human_review"]
+        BLOCK["Exit 2 → write blocked, surfaced to operator"]
+        H -->|violation| BLOCK
+    end
+
+    W --> H
+    H -->|pass| D
+
+    classDef modelNode fill:#e8edff,stroke:#3b5bdb,color:#1a1a2e
+    classDef harnessNode fill:#ffe9d6,stroke:#c2650a,color:#1a1a2e
+    class A,B,S1,S2,S3,S4,W,D,STOP,SP,N modelNode
+    class H,BLOCK harnessNode
 ```
+
+Two different planes, drawn deliberately: the blue nodes are the Skill/Agents reasoning
+in-context — they can be wrong or forget an instruction. The orange node is a plain
+Python script the Claude Code **harness** runs after every `Write`, entirely outside the
+model's context — it doesn't trust the model, it re-reads the file and checks the rule
+itself. See "The guardrail is enforced twice, on purpose" below.
 
 **The one hard stop:** any enquiry touching clinical/patient-identifiable data
 (`phi_involved: true`) always requires human review and is never auto-dispatched,
