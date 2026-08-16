@@ -9,6 +9,8 @@ title: LinkHealth Intake Triage
 
 # LinkHealth Intake Triage
 
+![center width:240](linkhealthsolutios_logo.jpeg)
+
 **An AI triage system for inbound business enquiries**
 
 - A professional-services firm receives **40–60 enquiries/week** via a web form
@@ -38,6 +40,12 @@ enquiry (raw_text · industry · org_size · urgency)
   backstop in code (post-write validator — the model cannot skip it)
 - **The one hard stop**: any PHI-involved enquiry is queued for human review,
   never auto-dispatched
+- **Model/API**: LLM classification via API — the same prompt assets run on
+  Claude Code and DeepSeek Harness, so the model choice is swappable, not baked in
+- **Enrichment**: each enquiry is enriched into a structured decision — service
+  line + a 4-dimension score with a rationale — not just a label
+- **Integration points**: web-form input → hub → spoke deliverable; the spokes
+  adapt to the client's existing systems (scheduling app, EHR, insurance portals)
 
 ---
 
@@ -106,9 +114,12 @@ silently skip the guardrail.
 
 ---
 
-<!-- 7 · Extension — Deploy to VM -->
+<!-- 7 · Extension — Deploy to VM (beyond the core brief) -->
 
 # Extension · Deployed to a cloud VM via CI/CD
+
+*Beyond the core brief — an optional stretch showing the same capability
+running in production; the assignment itself is fully covered by slides 1–6.*
 
 ```
 git push main → GitHub Actions → build self-contained release → GCP VM
