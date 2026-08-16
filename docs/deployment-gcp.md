@@ -56,6 +56,36 @@ Rule: the tunnel ALWAYS binds local port `3082`; `3080` is reserved for the
 local Dev profile. This makes both addresses of 3080 identical (Dev) and 3082
 the only tunnel door.
 
+## Deployed inventory (what is actually on the VM)
+
+The `linkhealth` profile composes exactly two business plugins on top of the DSH
+platform bundles:
+
+| Layer | Item | Role |
+|---|---|---|
+| Business plugin | `linkhealth-intake-triage` (`triage-dsh-plugin`) | the capability engine: `intake-triage` hub skill + the 3 spoke skills (`automation-lead`, `data-lead`, `deployment-lead`) + the guardrail backstop + the `validate-triage-log` tool |
+| Business plugin | `linkhealth-gui` (`linkhealth-gui-plugin`) | the front door: brand theme + the capability launcher shown on the main page |
+| Platform bundle | `@deepseek-ai/dsh-base` | DSH core |
+| Platform bundle | `@deepseek-ai/dsh-web-app` | the web UI |
+
+**plugins vs skills vs capability cards — don't confuse them:**
+
+- **2 business plugins** — the deployable units (triage, gui).
+- **4 skills** — `intake-triage` hub + the 3 spokes, all shipped inside the ONE
+  triage plugin (they do not add to the plugin count).
+- **1 active capability card** on the main page ("Triage") — rendered by the
+  *gui* plugin as a launcher entry; the triage plugin does the actual work
+  behind it. **CDI Audit is a commented placeholder** in the gui launcher
+  config — ready to enable, not yet part of the deployment.
+
+Authoritative view:
+
+- `cordis.patch.yml` in the current release dir — the profile's plugin list
+  (this file *is* the deploy unit's manifest).
+- `plugins/` in the current release dir — the two plugin packages.
+- `dsh --profile linkhealth --dump-config` — the composed tree.
+- Runtime data: `/home/fmlin/linkhealth-workspace/data/triage_log.jsonl`.
+
 ## One-time setup (done)
 
 - [x] Billing linked (`linkhealth-care-2024` → LHS account)
