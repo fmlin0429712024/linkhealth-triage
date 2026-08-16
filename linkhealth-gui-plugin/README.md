@@ -83,3 +83,10 @@ them in sync; the tests are the contract.
   restrictive `exports` map.
 - **First inclusion of a client plugin needs one server restart** (the client
   graph is built at boot; HMR re-triggers only on entry *re-creation*).
+- **A patch entry's `config` does NOT reach the client plugin** — the client
+  graph passes only `id`/`url`/`inject`. The front-door configuration therefore
+  lives as built-in defaults in `lib/client.js` (`BUILTIN_CONFIG`, one place to
+  edit); if a config channel arrives later, `resolveConfig` merges it over.
+- **`settings.section` is a single-select navigation**: a section's component
+  renders only after its label ("LinkHealth Capabilities") is clicked — the
+  capability cards live behind that tab, not on the settings landing view.

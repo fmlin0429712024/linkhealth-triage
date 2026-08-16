@@ -28,6 +28,30 @@ window.__ModuleLoader__.load({
     const React = require('react')
 
     // ── inlined launcher-config (see contract note above) ──────────────────
+    // NOTE (learned live): the DSH client graph passes only id/url/inject to
+    // the browser — a patch entry's `config` does NOT reach the client plugin.
+    // Official client plugins read state via RPC/settings instead. So the
+    // front-door configuration lives HERE as built-in defaults (single place
+    // to edit); if a config channel ever arrives, resolveConfig merges it over
+    // these.
+    const BUILTIN_CONFIG = {
+      headline: 'LinkHealth Agents',
+      placeholder: 'Triage an enquiry, audit documentation — or describe what you need',
+      capabilities: [
+        {
+          id: 'triage',
+          label: 'Triage',
+          description: 'Classify, score, and route inbound business enquiries.',
+        },
+        // When dsh-cdi-plugin is integrated, append its entry here (and to the
+        // profile patch) — no other change needed.
+        // {
+        //   id: 'cdi',
+        //   label: 'CDI Audit',
+        //   description: 'Governed clinical-documentation audit against SOP rules.',
+        // },
+      ],
+    }
     const DEFAULTS = {
       headline: 'LinkHealth Agents',
       placeholder: 'Triage an enquiry, audit documentation — or describe what you need',
@@ -74,7 +98,7 @@ window.__ModuleLoader__.load({
     const inject = ['slots', 'theme', 'workspaces']
 
     function apply(ctx, config) {
-      const cfg = resolveConfig(config)
+      const cfg = resolveConfig({ ...BUILTIN_CONFIG, ...(config ?? {}) })
       const disposers = []
       const slots = ctx.get('slots')
       const theme = ctx.get('theme')
@@ -176,7 +200,8 @@ window.__ModuleLoader__.load({
       )
     }
 
-    function CapabilityShowcase({ capabilities, headline }) {
+    function CapabilityShowcase(props) {
+      const { capabilities, headline } = props
       if (!capabilities || capabilities.length === 0) return null
       return React.createElement(
         'section',
