@@ -227,74 +227,24 @@ One DSH installation runs many profiles (`~/.dsh/profiles/<name>/`), each an
 independent plugin composition — the same install, different products. This
 product line runs as two:
 
-| Profile | Role | Composes | Start |
+| Profile / plugin | Role | Composes | Start / reinstall |
 |---|---|---|---|
-| `web` | **DSH Dev** — clean workbench | stock UI only (no LinkHealth plugins) | `dsh web` → http://127.0.0.1:3080 |
+| `web` | **DSH Dev** — clean workbench | the two plugins below | `dsh web` → http://127.0.0.1:3080 |
 | `linkhealth` | **LinkHealth VAS** — the product | triage + brand front door (`linkhealth-gui-plugin`) | `dsh --profile linkhealth --port 3081` → http://127.0.0.1:3081 |
+| `triage-dsh-plugin` | capability — hub skill + 3 spokes + guardrail | 1 `insert` in `~/.dsh/profiles/web/cordis.patch.yml` (`name: '<repo>/triage-dsh-plugin/lib/index.js'`) | hot-reloads, no restart |
+| `linkhealth-gui-plugin` | front door — theme + launcher + showcase | symlink into `web/node_modules` + 1 `insert` | restart once |
 
-Plugins are **shared assets referenced by profiles, never copied**: `web` stays
-clean for development, `linkhealth` composes the product. Adding a capability
-means adding its plugin to the `linkhealth` profile — never to `web`. Because
-deployment is config-as-code (the profile is the deployment unit), the same
-`linkhealth` files that run locally are the ones deployed to a cloud VM.
+Plugins are **shared assets referenced by profiles, never copied**: `web` (Dev)
+runs the two plugins above for development, `linkhealth` composes the product
+front door. Because deployment is config-as-code (the profile is the deployment
+unit), the same `linkhealth` files that run locally are the ones deployed to a
+cloud VM.
 
 The front door (`linkhealth-gui-plugin/`) brands the product surface — deep-teal
 theme, a capability launcher in the sidebar, a capabilities showcase in Settings
 — all additive, no default component replaced. See `linkhealth-gui-plugin/README.md`
 and `triage-dsh-plugin/README.md` for the layouts and the Claude Code ↔ DSH
 mapping.
-
-### Reinstall cheatsheet — the two plugins
-
-Both plugins are wired purely through the profile's patch layer
-(`~/.dsh/profiles/<profile>/cordis.patch.yml`). Reinstalling on a fresh machine
-is re-adding two `insert` blocks — plus one server restart for the GUI plugin.
-`web` stays clean (no inserts); `linkhealth` gets both, as below.
-
-**① `triage-dsh-plugin` — the capability** (host: `intake-triage` skill + 3
-spokes + guardrail backstop). Append to `cordis.patch.yml` — hot-reloads, no
-restart:
-
-```yaml
-- insert:
-    - id: linkhealth-intake-triage
-      name: '/absolute/path/to/triage-dsh-plugin/lib/index.js'
-      config:
-        logPath: 'data/triage_log.jsonl'
-```
-
-Verify with `dsh --profile <name> --dump-config`, or the standalone guardrail
-check `python3 triage-dsh-plugin/scripts/validate_triage_log.py data/triage_log.jsonl`.
-
-**② `linkhealth-gui-plugin` — the front door** (client: deep-teal theme +
-capability launcher + showcase). Two steps, then **one server restart**
-(Ctrl+C → `dsh web`) — the client graph is composed at boot; afterwards edits
-hot-reload:
-
-```sh
-ln -s /absolute/path/to/linkhealth-gui-plugin ~/.dsh/profiles/<profile>/node_modules/linkhealth-gui-plugin
-```
-
-```yaml
-- insert:
-    - id: linkhealth-gui
-      name: 'linkhealth-gui-plugin'
-      config:
-        headline: 'LinkHealth Agents'
-        placeholder: 'Triage an enquiry, audit documentation — or describe what you need'
-        capabilities:
-          - id: triage
-            label: Triage
-            description: 'Classify, score, and route inbound business enquiries.'
-          - id: cdi
-            label: CDI Audit
-            description: 'Governed clinical-documentation audit against SOP rules.'
-```
-
-To remove either plugin: delete its `insert` block (and the `node_modules`
-symlink for ②). The CI/CD copy of the same wiring is
-`deploy/profile-linkhealth/cordis.patch.yml` with relative paths (`./plugins/…`)
-— one template for both local dev and the VM release.
 
 ## 5. Commercialize — from MVP to client service (VAS)
 
