@@ -7,10 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 LinkHealth Intake Triage — a prototype that classifies, enriches, and routes inbound
 business enquiries for a one-person AI-enablement consultancy serving the patient-care
 domain. It is built entirely from Claude Code primitives (a Skill, three Agents, a
-hook) rather than a standalone app. The original task brief is
-`AIVC_Technical Challenge_Task 1.2.pdf`; the actual spec-as-built is `docs/PRD.md`, and
-task-by-task status (including open items) is `docs/TASKS.md`. Read those two before
-making non-trivial changes — this CLAUDE.md summarizes them but they are authoritative.
+hook) rather than a standalone app. The spec-as-built is `docs/PRD.md`, and task-by-task status (including open
+items) is `docs/TASKS.md`. Read those two before making non-trivial changes —
+this CLAUDE.md summarizes them but they are authoritative.
 
 **Scope boundary (do not drift from this):** this system triages *business enquiries
 about LinkHealth's services*. It never triages patients and must never be presented as,
