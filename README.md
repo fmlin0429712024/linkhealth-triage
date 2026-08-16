@@ -1,5 +1,7 @@
 # LinkHealth Intake Triage
 
+[![Deploy](https://github.com/fmlin0429712024/linkhealth-triage/actions/workflows/deploy.yml/badge.svg)](https://github.com/fmlin0429712024/linkhealth-triage/actions/workflows/deploy.yml)
+
 An automated triage system for inbound business enquiries at a healthcare-sector AI
 consultancy. Given a free-text enquiry plus industry, org size, and stated urgency, it
 classifies the enquiry by service line, scores its complexity, flags PHI/compliance
@@ -244,8 +246,9 @@ mapping.
 
 ## 5. Commercialize — from MVP to client service (VAS)
 
-*Not built yet — the roadmap this repo is executing: it turns the Section 4 PoC
-into a commercial service, and stage 0 starts today.*
+*Partially built — stage 0 is DONE and live: the system runs on a GCP VM via
+CI/CD (see below and `docs/deployment-gcp.md`). Stages 1–2 are the roadmap
+ahead.*
 
 **VAS (Value-Added Service)** — an AI-driven service layer on top of a client's
 existing operations: specialized, constrained, auditable, and therefore safe for
@@ -265,6 +268,16 @@ flowchart TB
     P --> E --> D
 ```
 
+**Stage 0 in production — CI/CD pipeline:**
+
+```mermaid
+flowchart LR
+    G["git push main"] --> A["GitHub Actions<br/>build self-contained release<br/>(profile + plugins)"]
+    A -->|scp| V["GCP VM<br/>releases/&lt;sha&gt; → current → systemd"]
+    V --> H["Health check<br/>LinkHealth UI on :3080"]
+    H -->|fail| R["Rollback = symlink switch"]
+```
+
 1. **Product — fully customized, extendable.** The client-facing surface is
    configured per customer (branding, service lines, scoring, integrations); the
    capability underneath is the same packaged plugin, so growing one client's
@@ -278,11 +291,11 @@ flowchart TB
 
 ### Roadmap (in execution)
 
-| Stage | What | When it's the right move |
+| Stage | What | Status |
 |---|---|---|
-| 0 | Run DSH as an internal engine (GCP VM, private access) | now — starts today |
-| 1 | First client: intake → triage → human review → delivery | validates the service |
-| 2 | Productize: client portal, auth, multi-tenant, billing | multiple clients |
+| 0 | GCP VM + CI/CD engine (private access, SSH tunnel) | ✅ **DONE — live** (`docs/deployment-gcp.md`) |
+| 1 | First client: intake → triage → human review → delivery | ⏳ next |
+| 2 | Productize: client portal, auth, multi-tenant, billing | ⏳ later |
 
 VAS is a working name; the standard positioning is *agent-powered vertical
 service* (the AaaS family).
