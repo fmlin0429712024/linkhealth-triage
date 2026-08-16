@@ -196,22 +196,90 @@ and a message queue (see the trigger table in `docs/PRD.md` §7 for when that ch
   content. That's a defensible but debatable line — worth revisiting against actual
   legal/compliance guidance rather than a judgment call made while building this.
 
-## 4. Optional — Extended PoC: Deploying through DSH
+## 4. PoC — Deploying the capability through DSH (local → cloud)
 
-The core deliverable is the Claude Code plugin (Sections 1–3). This section is an
-**optional extended PoC, outside the core scope**: the same system packaged as a
-DeepSeek Harness (DSH) plugin (`triage-dsh-plugin/`), showing the triage capability is
-portable across agent runtimes. It is a personal deployment, not a distribution
-package. Deploying it is a single `insert` in the profile's patch layer
-(`~/.dsh/profiles/<profile>/cordis.patch.yml`) pointing at the plugin folder:
-no install step, no restart (the patch layer hot-reloads).
+The core deliverable is the Claude Code plugin (Sections 1–3). This section is a
+**PoC that turns the same capability into a deployable service** — the journey this
+repo is on:
 
-DSH-side it registers the same assets: the `intake-triage` hub skill, the three
-spoke role prompts, the `validate-triage-log` tool, and a `tools/post-execute`
-guardrail backstop — the DSH analogue of the Claude Code hook. The guardrail rule
-set is deliberately kept in three places (SKILL.md instruction, `lib/validate.js`,
-`scripts/validate_triage_log.py`) so it is enforced in code, not just by the model.
+```mermaid
+flowchart LR
+    A["Capability as a plugin<br/>(this repo: skill · spokes · guardrail)"]
+    A --> B["Claude Code<br/>(§2)"]
+    A --> C["DSH<br/>(this section)"]
+    C --> D["Deploy: one profile,<br/>local == cloud VM"]
+    D --> E["Customize: brand +<br/>per-client config"]
+    E --> F["VAS: client-facing<br/>service (§5)"]
+```
 
-Verified live in a headless DSH profile: classify → log → guardrail block →
-remediation, including a PHI case correctly queued for human review. See
-`triage-dsh-plugin/README.md` for the layout and the Claude Code ↔ DSH mapping.
+The DSH plugin (`triage-dsh-plugin/`) is the same system packaged for DeepSeek
+Harness — a personal deployment, not a distribution package. It registers the same
+assets: the `intake-triage` hub skill, the three spoke role prompts, the
+`validate-triage-log` tool, and a `tools/post-execute` guardrail backstop — the DSH
+analogue of the Claude Code hook. The guardrail rule set is deliberately kept in
+three places (SKILL.md instruction, `lib/validate.js`, `scripts/validate_triage_log.py`)
+so it is enforced in code, not just by the model.
+
+**Verified live** in a headless DSH profile: classify → log → guardrail block →
+remediation, including a PHI case correctly queued for human review.
+
+Three things make this a service, not just a second packaging:
+
+1. **Deployment is configuration.** The profile is the deployment unit — a
+   `cordis.patch.yml` insert pointing at the plugin folder. No install step, no
+   restart (the patch layer hot-reloads). The same artifact that runs locally is
+   the one deployed to a cloud VM: dev and prod are the same folder, the same
+   patch layer, the same guardrail (environment differences live in the DSH
+   config layer, not the code).
+2. **It targets a cloud VM.** The PoC deploys DSH as an internal engine on a GCP
+   VM (private access), ready for client work — because deployment is
+   config-as-code, shipping to the VM is a copy of the same asset, not a rewrite.
+3. **It is brandable.** A minimal client-side theme PoC (logo, brand colors)
+   shows the client-facing surface can be customized per customer.
+
+See `triage-dsh-plugin/README.md` for the layout and the Claude Code ↔ DSH mapping.
+
+## 5. Vision — from assignment to client service (VAS)
+
+*Not built yet — the roadmap this repo is executing: it turns the Section 4 PoC
+into a commercial service, and stage 0 starts today.*
+
+**VAS (Value-Added Service)** — an AI-driven service layer on top of a client's
+existing operations: specialized, constrained, auditable, and therefore safe for
+healthcare data (no open-ended general agents touching client data).
+
+```mermaid
+flowchart TB
+    subgraph P["1 · Product — fully customized, extendable"]
+        P1["Branded client portal & workflow<br/>per-client config: service lines, scoring, integrations"]
+    end
+    subgraph E["2 · Engine — the reusable capability from this repo"]
+        E1["intake-triage plugin<br/>classify → score → guardrail → route → log"]
+    end
+    subgraph D["3 · Deployment — cloud VM, dev/prod identical"]
+        D1["Same plugin folder + patch layer on a GCP VM<br/>as on the local machine — no environment drift"]
+    end
+    P --> E --> D
+```
+
+1. **Product — fully customized, extendable.** The client-facing surface is
+   configured per customer (branding, service lines, scoring, integrations); the
+   capability underneath is the same packaged plugin, so growing one client's
+   needs never forks the core.
+2. **Engine — this repo.** The triage capability stays a packaged plugin (Claude
+   Code and DSH); the core is rewritten zero times across clients and runtimes.
+3. **Deployment — cloud VM, dev/prod consistent.** Development happens locally
+   with the exact same plugin folder, patch layer, and guardrail that runs on
+   the VM — the profile is the deployment unit, so "works on my machine" is the
+   same artifact that runs in production.
+
+### Roadmap (in execution)
+
+| Stage | What | When it's the right move |
+|---|---|---|
+| 0 | Run DSH as an internal engine (GCP VM, private access) | now — starts today |
+| 1 | First client: intake → triage → human review → delivery | validates the service |
+| 2 | Productize: client portal, auth, multi-tenant, billing | multiple clients |
+
+VAS is a working name; the standard positioning is *agent-powered vertical
+service* (the AaaS family).
