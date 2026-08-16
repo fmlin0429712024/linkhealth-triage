@@ -38,8 +38,23 @@ GitHub Actions ──scp/ssh──► GCP VM (linkhealth-vm, us-central1-a)
                                 scripts/{bootstrap,deploy}.sh
 ```
 
-Access for humans: `gcloud compute ssh linkhealth-vm -- -L 3080:localhost:3080`
+Access for humans: `gcloud compute ssh linkhealth-vm -- -L 3082:localhost:3080`
 (SSH tunnel; no public port for the app).
+
+## Port convention (avoid the localhost/IPv6 trap)
+
+On macOS `localhost` may resolve to IPv6 `::1` while `127.0.0.1` is IPv4 — two
+*different* loopback addresses that can host different services on the same port
+number. Keep them unambiguous with a fixed convention:
+
+| Address | What it is |
+|---|---|
+| `http://127.0.0.1:3080` (and `localhost:3080`) | **Local Dev only** — never open a tunnel on 3080 |
+| `http://127.0.0.1:3082` (tunnel up) | **GCP VM LinkHealth** — the SSH tunnel always uses local port **3082** |
+
+Rule: the tunnel ALWAYS binds local port `3082`; `3080` is reserved for the
+local Dev profile. This makes both addresses of 3080 identical (Dev) and 3082
+the only tunnel door.
 
 ## One-time setup (done)
 
