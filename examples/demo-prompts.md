@@ -24,6 +24,7 @@ Use the intake-triage skill to process this enquiry end to end (classify → sco
 - stated_urgency: medium
 
 When done, report: service_line, complexity, phi_involved, requires_human_review, routed_to.
+Respond in English.
 ```
 
 **Expected**: Process & Workflow Automation / simple / phi=false / no guardrail
@@ -46,6 +47,7 @@ decision to data/triage_log.jsonl:
 
 When done, report: service_line, complexity, phi_involved, requires_human_review,
 and whether dispatch was blocked (must NOT auto-dispatch).
+Respond in English.
 ```
 
 **Expected**: Process & Workflow Automation / complex (6) / phi=true →
@@ -60,6 +62,8 @@ demonstrates the hard guardrail stop.
 Append the following record to data/triage_log.jsonl (do not modify existing content):
 
 {"enquiry_id": "BAD-1", "service_line": "Documentation & Data Analytics", "complexity_score": {"integration_depth": 1, "data_sensitivity": 2, "physical_onsite": 0, "org_scale": 1, "total": 2}, "complexity": "simple", "urgency": "medium", "phi_involved": true, "requires_human_review": false, "needs_manual_triage": false, "routed_to": "data-lead", "rationale": "test"}
+
+Respond in English.
 ```
 
 **Expected**: the write is blocked with **`[guardrail] BLOCKED`** (phi=true but
