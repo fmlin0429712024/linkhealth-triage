@@ -209,6 +209,10 @@ window.__ModuleLoader__.load({
       )
     }
 
-    return (module.exports = { apply, inject })
+    // The loader's factory contract: the return value IS the module exports
+    // (do not use `module.exports` — `module` is not defined inside the
+    // factory; the official bundles define `var module` themselves, returning
+    // is the cleaner equivalent).
+    return { apply, inject }
   },
 })
