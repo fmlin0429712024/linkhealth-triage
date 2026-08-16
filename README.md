@@ -299,3 +299,24 @@ flowchart LR
 
 VAS is a working name; the standard positioning is *agent-powered vertical
 service* (the AaaS family).
+
+## 6. Testing
+
+| Layer | What | Where |
+|---|---|---|
+| Unit | 22 `node:test` cases (zero deps) — guardrail + launcher logic | `node --test` |
+| Demo | 3 ready-to-paste prompts: full flow / guardrail trip / hard block | `examples/demo-prompts.md` |
+| Production | live verification on the GCP VM (classify → guardrail → block → spoke) | `docs/testing.md` |
+
+Full testing doc, known boundaries, and the production checklist:
+[`docs/testing.md`](docs/testing.md).
+
+## 7. Docs
+
+| Doc | What it covers |
+|---|---|
+| [`docs/PRD.md`](docs/PRD.md) | the triage system spec-as-built (core) |
+| [`docs/PRD-gui-plugin.md`](docs/PRD-gui-plugin.md) | the front-door plugin spec |
+| [`docs/deployment-gcp.md`](docs/deployment-gcp.md) | GCP deploy + CI/CD + tunnel access + rollback |
+| [`docs/testing.md`](docs/testing.md) | unit / demo / production verification |
+| [`examples/demo-prompts.md`](examples/demo-prompts.md) | three ready-to-paste demo prompts |
