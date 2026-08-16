@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Bootstrap a fresh GCP VM into a LinkHealth deploy target. Idempotent — safe
+# to re-run. Run as the deploy user (ubuntu) with sudo.
+#
+#   sudo bash bootstrap-vm.sh
+#
+# Installs: Node 22, the dsh CLI, the release layout, and the systemd unit.
+set -euo pipefail
+
+echo "==> Node 22"
+if ! command -v node >/dev/null 2>&1; then
+  curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+  apt-get install -y nodejs
+fi
+node --version
+
+echo "==> dsh CLI (global)"
+if ! command -v dsh >/dev/null 2>&1; then
+  npm install -g @deepseek-ai/dsh
+fi
+DASH_BIN="$(command -v dsh)"
+echo "dsh at: $DASH_BIN"
+
+echo "==> Release layout"
+mkdir -p /opt/linkhealth/{incoming,releases,current,scripts}
+mkdir -p /opt/linkhealth/dsh-home/profiles
+
+echo "==> systemd unit"
+cat > /etc/systemd/system/linkhealth.service <<EOF
+[Unit]
+Description=LinkHealth VAS (dsh profile)
+After=network-online.target
+
+[Service]
+User=$USER
+WorkingDirectory=/opt/linkhealth/current
+Environment=DSH_HOME=/opt/linkhealth/dsh-home
+ExecStart=$DASH_BIN --profile linkhealth --port 3080
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload
+
+echo "==> Bootstrap done. Next: add the deploy SSH public key, then run deploy.sh from CI."

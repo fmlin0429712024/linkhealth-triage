@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Deploy one release tarball onto the VM. Runs as root (sudo), invoked by CI.
+#
+#   sudo bash deploy.sh <release-file.tar.gz> <deepseek-api-key>
+#
+# Layout:
+#   /opt/linkhealth/releases/<name>/   one immutable release (profile + plugins)
+#   /opt/linkhealth/current            symlink → active release
+#   /opt/linkhealth/dsh-home/profiles/linkhealth → current
+set -euo pipefail
+
+RELEASE_FILE="$1"
+DEEPSEEK_KEY="${2:-}"
+
+NAME="$(basename "$RELEASE_FILE" .tar.gz)"
+RELEASE_DIR="/opt/linkhealth/releases/$NAME"
+
+echo "==> Unpack $RELEASE_FILE → $RELEASE_DIR"
+mkdir -p /opt/linkhealth/releases
+rm -rf "$RELEASE_DIR"
+mkdir -p /tmp/linkhealth-unpack
+tar -xzf "/opt/linkhealth/incoming/$RELEASE_FILE" -C /tmp/linkhealth-unpack
+mv /tmp/linkhealth-unpack/profile "$RELEASE_DIR"
+
+echo "==> Point current → $NAME"
+ln -sfn "$RELEASE_DIR" /opt/linkhealth/current
+ln -sfn /opt/linkhealth/current /opt/linkhealth/dsh-home/profiles/linkhealth
+
+echo "==> Credentials (DeepSeek key)"
+if [ -n "$DEEPSEEK_KEY" ]; then
+  mkdir -p /opt/linkhealth/dsh-home
+  printf 'DEEPSEEK_API_KEY: %s\n' "$DEEPSEEK_KEY" > /opt/linkhealth/dsh-home/.credentials.yaml
+  chmod 600 /opt/linkhealth/dsh-home/.credentials.yaml
+fi
+
+echo "==> Restart service"
+systemctl restart linkhealth
+sleep 8
+
+echo "==> Health check"
+if curl -sf http://localhost:3080/ > /dev/null; then
+  echo "DEPLOY_OK: $NAME (http://localhost:3080 responding)"
+else
+  echo "DEPLOY_FAILED: $NAME (service not responding)" >&2
+  journalctl -u linkhealth --no-pager -n 20 >&2 || true
+  exit 1
+fi
+
+# Rollback hint (keep in the docs):
+#   ln -sfn /opt/linkhealth/releases/<previous> /opt/linkhealth/current
+#   systemctl restart linkhealth

@@ -1,0 +1,21 @@
+# LinkHealth VAS profile — the deployable unit.
+#
+# This is the CI/CD copy: paths are RELATIVE to the profile directory, so the
+# whole release directory (profile + plugins) is self-contained and identical
+# on every machine. The local development copy (in ~/.dsh/profiles/linkhealth/)
+# may use absolute paths for convenience; the deploy pipeline always builds
+# from this template.
+
+# ── Triage capability (host: hub skill + spokes + guardrail backstop) ────────
+- insert:
+    - id: linkhealth-intake-triage
+      name: './plugins/triage-dsh-plugin/lib/index.js'
+      config:
+        logPath: 'data/triage_log.jsonl'
+
+# ── LinkHealth Agents front door (client: brand theme + capability launcher) ─
+- insert:
+    - id: linkhealth-gui
+      name: 'linkhealth-gui-plugin'
+      config:
+        headline: 'LinkHealth Agents'
