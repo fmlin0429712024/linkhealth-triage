@@ -59,7 +59,7 @@ demonstrates the hard guardrail stop.
 ## 3 · Hard block (backstop rejects a violating write)
 
 ```
-Append the following record to data/triage_log.jsonl (do not modify existing content):
+Use the edit tool to append the following record to data/triage_log.jsonl (do not modify existing content — append only):
 
 {"enquiry_id": "BAD-1", "service_line": "Documentation & Data Analytics", "complexity_score": {"integration_depth": 1, "data_sensitivity": 2, "physical_onsite": 0, "org_scale": 1, "total": 2}, "complexity": "simple", "urgency": "medium", "phi_involved": true, "requires_human_review": false, "needs_manual_triage": false, "routed_to": "data-lead", "rationale": "test"}
 
@@ -72,3 +72,7 @@ on the VM too.
 
 > Note: this record deliberately violates the rule. After the test, fix or
 > remove the bad record from the log to keep it valid.
+> Why "edit tool": the `tools/post-execute` backstop blocks violating
+> `write`/`edit` calls — a bash append bypasses that tool-level guard (by
+> design, same as the Claude Code hook); this prompt exists to show the
+> immediate BLOCKED on the controlled path.

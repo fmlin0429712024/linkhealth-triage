@@ -102,7 +102,9 @@ Produce exactly this JSON shape:
 
 Then append this JSON as one line to `data/triage_log.jsonl` (create the file if it
 doesn't exist) — this is the system's observability trail. Every triage decision must be
-logged, including ones that trip the guardrail.
+logged, including ones that trip the guardrail. Append with the `write` or `edit` tool
+— the guardrail backstop covers those; do not append via `bash` (a shell append is not
+intercepted by the backstop and must be validated manually).
 
 **After appending, call the `validate-triage-log` tool** to confirm the guardrail passed.
 An automatic backstop also blocks invalid writes at the harness level (`tools/post-execute`):
