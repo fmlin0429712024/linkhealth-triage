@@ -148,13 +148,19 @@ export function apply(ctx, entryConfig) {
   // is a `data/triage_log.jsonl` are checked; the file is re-read from disk
   // (never trusting the model's reported content), and a violation turns the
   // tool result into a blocked error the model cannot ignore.
+  // NOTE (learned live on the VM): the log path must resolve against the
+  // SESSION workspace (exec.agent.session.header.cwd), NOT process.cwd() —
+  // the service runs from the release directory while the session works in a
+  // separate workspace, and resolving against the wrong root silently skips
+  // the check (validates a non-existent file → pass).
+  const workspaceCwd = (exec) => exec?.agent?.session?.header?.cwd || process.cwd()
   const onPostExecute = async (exec, result, next) => {
     try {
       if (
         (exec?.name === 'write' || exec?.name === 'edit') &&
         isTriageLogPath(exec?.arguments?.file_path)
       ) {
-        const target = path.resolve(String(exec.arguments.file_path))
+        const target = path.resolve(workspaceCwd(exec), String(exec.arguments.file_path))
         const verdict = validateLogFile(target)
         if (!verdict.ok) {
           return { kind: 'block', feedback: blockFeedback(verdict.reason) }
@@ -199,8 +205,11 @@ export function apply(ctx, entryConfig) {
           },
           render: renderValidation,
         },
-        async execute(args) {
-          const target = args?.log_path ? path.resolve(String(args.log_path)) : path.resolve(logPath)
+        async execute(args, exec) {
+          // Default log path resolves against the session workspace (not
+          // process.cwd()) — see the note on the post-execute backstop above.
+          const base = exec?.agent?.session?.header?.cwd || process.cwd()
+          const target = args?.log_path ? path.resolve(base, String(args.log_path)) : path.resolve(base, logPath)
           return validateLogFile(target)
         },
       }),
