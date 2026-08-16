@@ -22,8 +22,11 @@ DASH_BIN="$(command -v dsh)"
 echo "dsh at: $DASH_BIN"
 
 echo "==> Release layout"
+DEPLOY_USER="${SUDO_USER:-$USER}"
 mkdir -p /opt/linkhealth/{incoming,releases,current,scripts}
 mkdir -p /opt/linkhealth/dsh-home/profiles
+# the deploy user (CI scp/ssh) owns incoming + scripts; releases/current stay root-owned
+chown -R "$DEPLOY_USER" /opt/linkhealth/incoming /opt/linkhealth/scripts
 
 echo "==> systemd unit"
 cat > /etc/systemd/system/linkhealth.service <<EOF
@@ -32,7 +35,7 @@ Description=LinkHealth VAS (dsh profile)
 After=network-online.target
 
 [Service]
-User=$USER
+User=$DEPLOY_USER
 WorkingDirectory=/opt/linkhealth/current
 Environment=DSH_HOME=/opt/linkhealth/dsh-home
 ExecStart=$DASH_BIN --profile linkhealth --port 3080

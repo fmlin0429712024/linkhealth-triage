@@ -23,8 +23,12 @@ tar -xzf "/opt/linkhealth/incoming/$RELEASE_FILE" -C /tmp/linkhealth-unpack
 mv /tmp/linkhealth-unpack/profile "$RELEASE_DIR"
 
 echo "==> Point current → $NAME"
-ln -sfn "$RELEASE_DIR" /opt/linkhealth/current
-ln -sfn /opt/linkhealth/current /opt/linkhealth/dsh-home/profiles/linkhealth
+# `current` is created as a real directory by bootstrap, so replace it
+# outright (rm + ln) rather than trying to overwrite in place.
+rm -rf /opt/linkhealth/current
+ln -s "$RELEASE_DIR" /opt/linkhealth/current
+rm -f /opt/linkhealth/dsh-home/profiles/linkhealth
+ln -s /opt/linkhealth/current /opt/linkhealth/dsh-home/profiles/linkhealth
 
 echo "==> Credentials (DeepSeek key)"
 if [ -n "$DEEPSEEK_KEY" ]; then
