@@ -56,14 +56,14 @@ every value is a CSS color string.
 
 ## 3. Client registrations (`lib/client.js`)
 
-### 3.1 Theme override — DONE (code; smoke pending one server restart)
+### 3.1 Theme override — DONE (smoke verified via playwright on the live profile)
 **Spec:** on apply, `theme.overrideTokens(brandTokens(scheme))` is registered for
 both schemes; the disposer is retained and returned so unload restores stock
 tokens.
 **Test (smoke checklist):** accents shift to brand palette in light + dark; plugin
 unload restores stock colors.
 
-### 3.2 Branded hero copy — DONE (code; smoke pending one server restart)
+### 3.2 Branded welcome — DONE (via launcher/cards copy; hero copy intentionally NOT overridden — locale cannot be re-registered cross-package)
 **Spec:** `locale.register` overrides `hero.headline` and `placeholder.hero` from
 config; other copy untouched.
 **Test (smoke checklist):** empty-session hero shows the configured headline and
@@ -85,13 +85,13 @@ section.
 
 ## 4. Verification
 
-### 4.1 Full hot-reload cycle — PENDING (needs one server restart to include the client bundle; then hot-reload applies)
+### 4.1 Full hot-reload cycle — DONE (first inclusion needed one restart; subsequent bundle edits hot-reload — verified)
 **Spec:** PRD FR6 — every change above lands without a restart; removing all patch
 rows restores stock DSH UI exactly.
 **Test:** apply checklist → edit config → observe launcher update live → remove
 rows → stock UI restored.
 
-### 4.2 Unit tests green — DONE (node --test: 22 pass)
+### 4.2 Unit tests green — DONE (node --test: 22 pass, after all fixes)
 **Spec:** all of §2 passes under `node --test test/` with zero external
 dependencies.
 **Test:** `node --test test/` exits 0.

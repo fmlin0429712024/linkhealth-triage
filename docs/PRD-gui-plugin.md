@@ -76,12 +76,15 @@ through the theme service's override mechanism and torn down on unload.
 **Acceptance:** the primary interactive/business accents change to the brand
 palette in both color schemes; unload restores stock tokens.
 
-### FR2 — Branded welcome (client, `locale` copy)
-The empty-session hero headline and composer placeholder are overridden with
-LinkHealth copy (e.g. headline "LinkHealth Agents", placeholder inviting triage or
-audit work). Overrides are scoped so other locale text is untouched.
+### FR2 — Branded welcome (client, launcher/cards copy)
+The branded welcome is carried by the plugin's own components — the launcher
+entries and the capability showcase use LinkHealth copy (headline "LinkHealth
+Agents"). The default hero copy is NOT overridden: DSH locale dictionaries
+cannot be re-registered cross-package (same namespace + locale key throws), so
+the stock hero stays untouched by design.
 
-**Acceptance:** hero shows the brand headline; other UI copy is unchanged.
+**Acceptance:** LinkHealth copy appears in the launcher and showcase; no other
+UI copy is changed; no locale re-registration is attempted.
 
 ### FR3 — Capability launcher (client, `sidebar.footer.action`)
 Two entries — **Triage** and **CDI Audit** — render in the sidebar footer. Each
@@ -100,13 +103,16 @@ existing settings sections.
 **Acceptance:** the section and cards render in Settings; absent config renders no
 section.
 
-### FR5 — Config-driven, zero business coupling
+### FR5 — Configuration lives in the bundle, zero business coupling
 The plugin's code contains **no reference** to triage/cdi internals — no imports
 from `triage-dsh-plugin` or `dsh-cdi-plugin`, no knowledge of their skills/tools.
-It reads capability entries purely from its own patch config.
+Capability entries come from `BUILTIN_CONFIG` in `lib/client.js` (one place to
+edit): the client graph passes only `id`/`url`/`inject`, so a patch entry's
+`config` never reaches the browser. If a config channel arrives later,
+`resolveConfig` merges it over the built-ins.
 
-**Acceptance:** code review shows zero imports of business plugins; changing the
-config list changes the launcher with no code change.
+**Acceptance:** code review shows zero imports of business plugins; editing the
+capability list is a one-place change in the bundle.
 
 ### FR6 — Reversible and hot-reloadable
 All registrations return disposers; the plugin is a pure client entry (no host
