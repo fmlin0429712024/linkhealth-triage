@@ -244,6 +244,58 @@ theme, a capability launcher in the sidebar, a capabilities showcase in Settings
 and `triage-dsh-plugin/README.md` for the layouts and the Claude Code ↔ DSH
 mapping.
 
+### Reinstall cheatsheet — the two plugins
+
+Both plugins are wired purely through the profile's patch layer
+(`~/.dsh/profiles/<profile>/cordis.patch.yml`). Reinstalling on a fresh machine
+is re-adding two `insert` blocks — plus one server restart for the GUI plugin.
+`web` stays clean (no inserts); `linkhealth` gets both, as below.
+
+**① `triage-dsh-plugin` — the capability** (host: `intake-triage` skill + 3
+spokes + guardrail backstop). Append to `cordis.patch.yml` — hot-reloads, no
+restart:
+
+```yaml
+- insert:
+    - id: linkhealth-intake-triage
+      name: '/absolute/path/to/triage-dsh-plugin/lib/index.js'
+      config:
+        logPath: 'data/triage_log.jsonl'
+```
+
+Verify with `dsh --profile <name> --dump-config`, or the standalone guardrail
+check `python3 triage-dsh-plugin/scripts/validate_triage_log.py data/triage_log.jsonl`.
+
+**② `linkhealth-gui-plugin` — the front door** (client: deep-teal theme +
+capability launcher + showcase). Two steps, then **one server restart**
+(Ctrl+C → `dsh web`) — the client graph is composed at boot; afterwards edits
+hot-reload:
+
+```sh
+ln -s /absolute/path/to/linkhealth-gui-plugin ~/.dsh/profiles/<profile>/node_modules/linkhealth-gui-plugin
+```
+
+```yaml
+- insert:
+    - id: linkhealth-gui
+      name: 'linkhealth-gui-plugin'
+      config:
+        headline: 'LinkHealth Agents'
+        placeholder: 'Triage an enquiry, audit documentation — or describe what you need'
+        capabilities:
+          - id: triage
+            label: Triage
+            description: 'Classify, score, and route inbound business enquiries.'
+          - id: cdi
+            label: CDI Audit
+            description: 'Governed clinical-documentation audit against SOP rules.'
+```
+
+To remove either plugin: delete its `insert` block (and the `node_modules`
+symlink for ②). The CI/CD copy of the same wiring is
+`deploy/profile-linkhealth/cordis.patch.yml` with relative paths (`./plugins/…`)
+— one template for both local dev and the VM release.
+
 ## 5. Commercialize — from MVP to client service (VAS)
 
 *Partially built — stage 0 is DONE and live: the system runs on a GCP VM via
