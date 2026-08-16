@@ -196,7 +196,7 @@ and a message queue (see the trigger table in `docs/PRD.md` §7 for when that ch
   content. That's a defensible but debatable line — worth revisiting against actual
   legal/compliance guidance rather than a judgment call made while building this.
 
-## 4. PoC — Deploying the capability through DSH (local → cloud)
+## 4. PoC — Deploying through DSH: two profiles, one product line
 
 The core deliverable is the Claude Code plugin (Sections 1–3). This section is a
 **PoC that turns the same capability into a deployable service** — the journey this
@@ -213,31 +213,34 @@ flowchart LR
 ```
 
 The DSH plugin (`triage-dsh-plugin/`) is the same system packaged for DeepSeek
-Harness — a personal deployment, not a distribution package. It registers the same
-assets: the `intake-triage` hub skill, the three spoke role prompts, the
-`validate-triage-log` tool, and a `tools/post-execute` guardrail backstop — the DSH
-analogue of the Claude Code hook. The guardrail rule set is deliberately kept in
-three places (SKILL.md instruction, `lib/validate.js`, `scripts/validate_triage_log.py`)
-so it is enforced in code, not just by the model.
+Harness — a personal deployment, not a distribution package: the `intake-triage`
+hub skill, the three spoke role prompts, the `validate-triage-log` tool, and a
+`tools/post-execute` guardrail backstop (the DSH analogue of the Claude hook).
+**Verified live**: classify → log → guardrail block → remediation, including a
+PHI case correctly queued for human review.
 
-**Verified live** in a headless DSH profile: classify → log → guardrail block →
-remediation, including a PHI case correctly queued for human review.
+### The real insight: profiles are applications
 
-Three things make this a service, not just a second packaging:
+One DSH installation runs many profiles (`~/.dsh/profiles/<name>/`), each an
+independent plugin composition — the same install, different products. This
+product line runs as two:
 
-1. **Deployment is configuration.** The profile is the deployment unit — a
-   `cordis.patch.yml` insert pointing at the plugin folder. No install step, no
-   restart (the patch layer hot-reloads). The same artifact that runs locally is
-   the one deployed to a cloud VM: dev and prod are the same folder, the same
-   patch layer, the same guardrail (environment differences live in the DSH
-   config layer, not the code).
-2. **It targets a cloud VM.** The PoC deploys DSH as an internal engine on a GCP
-   VM (private access), ready for client work — because deployment is
-   config-as-code, shipping to the VM is a copy of the same asset, not a rewrite.
-3. **It is brandable.** A minimal client-side theme PoC (logo, brand colors)
-   shows the client-facing surface can be customized per customer.
+| Profile | Role | Composes | Start |
+|---|---|---|---|
+| `web` | **DSH Dev** — clean workbench | stock UI only (no LinkHealth plugins) | `dsh web` → http://127.0.0.1:3080 |
+| `linkhealth` | **LinkHealth VAS** — the product | triage + brand front door (`linkhealth-gui-plugin`) | `dsh --profile linkhealth --port 3081` → http://127.0.0.1:3081 |
 
-See `triage-dsh-plugin/README.md` for the layout and the Claude Code ↔ DSH mapping.
+Plugins are **shared assets referenced by profiles, never copied**: `web` stays
+clean for development, `linkhealth` composes the product. Adding a capability
+means adding its plugin to the `linkhealth` profile — never to `web`. Because
+deployment is config-as-code (the profile is the deployment unit), the same
+`linkhealth` files that run locally are the ones deployed to a cloud VM.
+
+The front door (`linkhealth-gui-plugin/`) brands the product surface — deep-teal
+theme, a capability launcher in the sidebar, a capabilities showcase in Settings
+— all additive, no default component replaced. See `linkhealth-gui-plugin/README.md`
+and `triage-dsh-plugin/README.md` for the layouts and the Claude Code ↔ DSH
+mapping.
 
 ## 5. Vision — from assignment to client service (VAS)
 
