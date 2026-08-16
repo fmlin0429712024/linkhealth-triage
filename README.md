@@ -242,7 +242,7 @@ theme, a capability launcher in the sidebar, a capabilities showcase in Settings
 and `triage-dsh-plugin/README.md` for the layouts and the Claude Code ↔ DSH
 mapping.
 
-## 5. Vision — from assignment to client service (VAS)
+## 5. Commercialize — from MVP to client service (VAS)
 
 *Not built yet — the roadmap this repo is executing: it turns the Section 4 PoC
 into a commercial service, and stage 0 starts today.*
