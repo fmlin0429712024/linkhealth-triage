@@ -21,6 +21,9 @@ rm -rf "$RELEASE_DIR"
 mkdir -p /tmp/linkhealth-unpack
 tar -xzf "/opt/linkhealth/incoming/$RELEASE_FILE" -C /tmp/linkhealth-unpack
 mv /tmp/linkhealth-unpack/profile "$RELEASE_DIR"
+# the dsh service runs as the deploy user and writes back cordis.yml into the
+# profile dir, so the release must be owned by that user (not root)
+chown -R "$SUDO_USER" "$RELEASE_DIR"
 
 echo "==> Point current → $NAME"
 # `current` is created as a real directory by bootstrap, so replace it
