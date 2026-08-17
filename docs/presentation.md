@@ -9,9 +9,11 @@ title: LinkHealth Intake Triage
 
 # LinkHealth Intake Triage
 
-![center width:240](linkhealthsolutios_logo.jpeg)
-
 **An AI triage system for inbound business enquiries**
+
+*"LinkHealth" is a fictional company name used for this case study.*
+
+Forest Lin · 08/16/2026
 
 - A professional-services firm receives **40–60 enquiries/week** via a web form
 - Today: a junior analyst reads each submission, tags service line, estimates
